@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDPR Live Inspector - Nauka RODO w praktyce</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .header {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #4a9eff;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: #4a9eff;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: 2px solid #4a9eff;
+            background: transparent;
+            color: #4a9eff;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: #4a9eff;
+            color: #1a1a2e;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ============ SEKCJA 1: MASKOWANIE ============ */
+        .masking-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .masking-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .panel h2 {
+            color: #4a9eff;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #333;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        .masking-type {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .masking-type button {
+            padding: 8px 16px;
+            border: 1px solid #555;
+            background: rgba(0,0,0,0.3);
+            color: #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .masking-type button.active {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.2);
+            color: #4a9eff;
+        }
+
+        .result-box {
+            background: rgba(0,0,0,0.4);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4a9eff;
+        }
+
+        .result-box .label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .result-box .value {
+            font-size: 1.4rem;
+            font-family: 'Courier New', monospace;
+            color: #4a9eff;
+            word-break: break-all;
+        }
+
+        .result-box .value .masked-char {
+            color: #ff6b6b;
+            animation: pulse 0.5s ease-out;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0; transform: scale(1.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .explanation {
+            background: rgba(74, 158, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .explanation strong {
+            color: #4a9eff;
+        }
+
+        /* ============ SEKCJA 2: ANALIZA FORMULARZA ============ */
+        .analyzer-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .analyzer-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-field {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .form-field label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+
+        .form-field .badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .badge.required { background: #4a9eff; color: #000; }
+        .badge.optional { background: #555; color: #ccc; }
+        .badge.excessive { background: #ff6b6b; color: #fff; animation: blink 1s infinite; }
+
+        @keyframes blink {
+            50% { opacity: 0.5; }
+        }
+
+        .form-field input, .form-field select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #333;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-field.warning input {
+            border-color: #ffa500;
+            background: rgba(255, 165, 0, 0.1);
+        }
+
+        .form-field.danger input {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .form-field.ok input {
+            border-color: #4caf50;
+        }
+
+        .inspector-log {
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .log-entry.ok { background: rgba(76, 175, 80, 0.2); border-left: 3px solid #4caf50; }
+        .log-entry.warning { background: rgba(255, 165, 0, 0.2); border-left: 3px solid #ffa500; }
+        .log-entry.danger { background: rgba(255, 107, 107, 0.2); border-left: 3px solid #ff6b6b; }
+        .log-entry.info { background: rgba(74, 158, 255, 0.2); border-left: 3px solid #4a9eff; }
+
+        .compliance-meter {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .meter-bar {
+            height: 30px;
+            background: #333;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffa500, #4caf50);
+            border-radius: 15px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        /* ============ SEKCJA 3: PRZEPŁYW DANYCH ============ */
+        .flow-container {
+            text-align: center;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+
+        .flow-node {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid #4a9eff;
+            border-radius: 15px;
+            padding: 20px 30px;
+            min-width: 150px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .flow-node:hover {
+            transform: scale(1.05);
+            background: rgba(74, 158, 255, 0.2);
+        }
+
+        .flow-node.active {
+            background: rgba(74, 158, 255, 0.3);
+            box-shadow: 0 0 20px rgba(74, 158, 255, 0.5);
+        }
+
+        .flow-node .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: #4a9eff;
+            animation: arrowMove 1s infinite;
+        }
+
+        @keyframes arrowMove {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(10px); }
+        }
+
+        .flow-details {
+            background: rgba(0,0,0,0.4);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            text-align: left;
+            min-height: 200px;
+        }
+
+        .flow-details h3 {
+            color: #4a9eff;
+            margin-bottom: 15px;
+        }
+
+        .flow-details ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .flow-details li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .flow-details li:last-child {
+            border-bottom: none;
+        }
+
+        /* ============ SEKCJA 4: PRAWA UŻYTKOWNIKA ============ */
+        .rights-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .user-profile {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4a9eff, #7c3aed);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .user-info h3 {
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .user-info p {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .rights-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .right-btn {
+            padding: 20px;
+            border: 2px solid #333;
+            background: rgba(0,0,0,0.3);
+            color: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s;
+        }
+
+        .right-btn:hover {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+        }
+
+        .right-btn .right-icon {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .right-btn .right-name {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .right-btn .right-article {
+            font-size: 0.8rem;
+            color: #4a9eff;
+        }
+
+        .rights-demo {
+            background: rgba(0,0,0,0.4);
+            border-radius: 15px;
+            padding: 25px;
+            min-height: 300px;
+        }
+
+        .rights-demo h3 {
+            color: #4a9eff;
+            margin-bottom: 20px;
+        }
+
+        .data-export {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            color: #4caf50;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .consent-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .consent-item .consent-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle {
+            width: 50px;
+            height: 26px;
+            background: #333;
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: #4caf50;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .toggle.active::after {
+            transform: translateX(24px);
+        }
+
+        .delete-animation {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .delete-animation .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .delete-progress {
+            width: 100%;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .delete-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffa500);
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #555;
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: #4a9eff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🔒 GDPR Live Inspector</h1>
+        <p>Interaktywna nauka RODO przez praktykę</p>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" data-tab="masking">🎭 Maskowanie danych</button>
+        <button class="tab-btn" data-tab="analyzer">📊 Analiza formularza</button>
+        <button class="tab-btn" data-tab="flow">🔐 Przepływ danych</button>
+        <button class="tab-btn" data-tab="rights">⚖️ Prawa użytkownika</button>
+    </nav>
+
+    <!-- ============ SEKCJA 1: MASKOWANIE ============ -->
+    <section id="masking" class="tab-content active">
+        <div class="masking-container">
+            <div class="panel">
+                <h2>📝 Wprowadź dane</h2>
+                
+                <div class="input-group">
+                    <label>Imię i nazwisko</label>
+                    <input type="text" id="mask-name" placeholder="np. Jan Kowalski">
+                </div>
+                
+                <div class="input-group">
+                    <label>Adres email</label>
+                    <input type="email" id="mask-email" placeholder="np. jan.kowalski@firma.pl">
+                </div>
+                
+                <div class="input-group">
+                    <label>Numer telefonu</label>
+                    <input type="tel" id="mask-phone" placeholder="np. 500 123 456">
+                </div>
+                
+                <div class="input-group">
+                    <label>PESEL</label>
+                    <input type="text" id="mask-pesel" placeholder="np. 85010112345" maxlength="11">
+                </div>
+
+                <h2 style="margin-top: 30px;">⚙️ Technika ochrony</h2>
+                <div class="masking-type">
+                    <button class="active" data-type="masking">Maskowanie</button>
+                    <button data-type="pseudonym">Pseudonimizacja</button>
+                    <button data-type="anonym">Anonimizacja</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🔒 Dane chronione</h2>
+                
+                <div class="result-box">
+                    <div class="label">Imię i nazwisko</div>
+                    <div class="value" id="result-name">-</div>
+                </div>
+                
+                <div class="result-box">
+                    <div class="label">Email</div>
+                    <div class="value" id="result-email">-</div>
+                </div>
+                
+                <div class="result-box">
+                    <div class="label">Telefon</div>
+                    <div class="value" id="result-phone">-</div>
+                </div>
+                
+                <div class="result-box">
+                    <div class="label">PESEL</div>
+                    <div class="value" id="result-pesel">-</div>
+                </div>
+
+                <div class="explanation" id="masking-explanation">
+                    <strong>Maskowanie</strong> — częściowe ukrycie danych przy zachowaniu formatu. 
+                    Dane można odtworzyć mając klucz. Stosowane w logach, raportach, środowiskach testowych.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SEKCJA 2: ANALIZA FORMULARZA ============ -->
+    <section id="analyzer" class="tab-content">
+        <div class="analyzer-container">
+            <div class="panel">
+                <h2>📋 Formularz rejestracji</h2>
+                
+                <div class="form-field" data-field="email">
+                    <label>
+                        Email 
+                        <span class="badge required">WYMAGANE</span>
+                    </label>
+                    <input type="email" id="analyze-email" placeholder="Do założenia konta">
+                </div>
+
+                <div class="form-field" data-field="password">
+                    <label>
+                        Hasło
+                        <span class="badge required">WYMAGANE</span>
+                    </label>
+                    <input type="password" id="analyze-password" placeholder="Min. 8 znaków">
+                </div>
+
+                <div class="form-field" data-field="name">
+                    <label>
+                        Imię
+                        <span class="badge optional">OPCJONALNE</span>
+                    </label>
+                    <input type="text" id="analyze-name" placeholder="Do personalizacji">
+                </div>
+
+                <div class="form-field" data-field="phone">
+                    <label>
+                        Numer telefonu
+                        <span class="badge optional">OPCJONALNE</span>
+                    </label>
+                    <input type="tel" id="analyze-phone" placeholder="Do powiadomień SMS">
+                </div>
+
+                <div class="form-field" data-field="birthdate">
+                    <label>
+                        Data urodzenia
+                        <span class="badge excessive">NADMIAROWE?</span>
+                    </label>
+                    <input type="date" id="analyze-birthdate">
+                </div>
+
+                <div class="form-field" data-field="pesel">
+                    <label>
+                        PESEL
+                        <span class="badge excessive">NADMIAROWE!</span>
+                    </label>
+                    <input type="text" id="analyze-pesel" placeholder="Czy na pewno potrzebny?">
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🔍 GDPR Inspector</h2>
+                
+                <div class="compliance-meter">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Zgodność z RODO</span>
+                        <span id="compliance-percent">100%</span>
+                    </div>
+                    <div class="meter-bar">
+                        <div class="meter-fill" id="compliance-bar" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div class="inspector-log" id="inspector-log">
+                    <div class="log-entry info">
+                        🚀 Inspector uruchomiony. Zacznij wypełniać formularz...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SEKCJA 3: PRZEPŁYW DANYCH ============ -->
+    <section id="flow" class="tab-content">
+        <div class="flow-container">
+            <h2 style="color: #4a9eff; margin-bottom: 10px;">Jak przepływają Twoje dane?</h2>
+            <p style="color: #888; margin-bottom: 20px;">Kliknij na element, aby zobaczyć szczegóły</p>
+            
+            <div class="flow-diagram">
+                <div class="flow-node active" data-node="input">
+                    <div class="icon">📝</div>
+                    <div>Formularz</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-node" data-node="encrypt">
+                    <div class="icon">🔐</div>
+                    <div>Szyfrowanie</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-node" data-node="storage">
+                    <div class="icon">🗄️</div>
+                    <div>Baza danych</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-node" data-node="access">
+                    <div class="icon">👥</div>
+                    <div>Dostęp</div>
+                </div>
+            </div>
+
+            <div class="flow-details" id="flow-details">
+                <h3>📝 Zbieranie danych (Formularz)</h3>
+                <ul>
+                    <li>✅ <strong>Zasada minimalizacji</strong> — zbieramy tylko niezbędne dane</li>
+                    <li>✅ <strong>Podstawa prawna</strong> — zgoda lub realizacja umowy</li>
+                    <li>✅ <strong>Informowanie</strong> — użytkownik wie co i dlaczego zbieramy</li>
+                    <li>✅ <strong>Transmisja</strong> — dane przesyłane przez HTTPS (TLS 1.3)</li>
+                    <li>⚠️ <strong>Walidacja</strong> — sprawdzenie poprawności po stronie serwera</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SEKCJA 4: PRAWA UŻYTKOWNIKA ============ -->
+    <section id="rights" class="tab-content">
+        <div class="rights-container">
+            <div class="user-profile">
+                <div class="avatar">👤</div>
+                <div class="user-info">
+                    <h3>Jan Kowalski</h3>
+                    <p>jan.kowalski@email.com • Konto od: 15.03.2024</p>
+                </div>
+            </div>
+
+            <div class="rights-buttons">
+                <button class="right-btn" data-right="access">
+                    <div class="right-icon">📄</div>
+                    <div class="right-name">Prawo dostępu</div>
+                    <div class="right-article">Art. 15 RODO</div>
+                </button>
+                <button class="right-btn" data-right="portability">
+                    <div class="right-icon">📦</div>
+                    <div class="right-name">Prawo do przenoszenia</div>
+                    <div class="right-article">Art. 20 RODO</div>
+                </button>
+                <button class="right-btn" data-right="rectify">
+                    <div class="right-icon">✏️</div>
+                    <div class="right-name">Prawo do sprostowania</div>
+                    <div class="right-article">Art. 16 RODO</div>
+                </button>
+                <button class="right-btn" data-right="consent">
+                    <div class="right-icon">🎚️</div>
+                    <div class="right-name">Zarządzanie zgodami</div>
+                    <div class="right-article">Art. 7 RODO</div>
+                </button>
+                <button class="right-btn" data-right="delete">
+                    <div class="right-icon">🗑️</div>
+                    <div class="right-name">Prawo do usunięcia</div>
+                    <div class="right-article">Art. 17 RODO</div>
+                </button>
+                <button class="right-btn" data-right="object">
+                    <div class="right-icon">✋</div>
+                    <div class="right-name">Prawo do sprzeciwu</div>
+                    <div class="right-article">Art. 21 RODO</div>
+                </button>
+            </div>
+
+            <div class="rights-demo" id="rights-demo">
+                <h3>👆 Wybierz prawo, aby zobaczyć demonstrację</h3>
+                <p style="color: #888; margin-top: 10px;">
+                    Każde prawo z RODO możesz zobaczyć w akcji — jak wygląda realizacja żądania użytkownika.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>Projekt edukacyjny • GDPR Live Inspector</p>
+        <p style="margin-top: 5px;">
+            Źródła: <a href="https://gdpr.eu/" target="_blank">GDPR.eu</a> • 
+            <a href="https://uodo.gov.pl/" target="_blank">UODO</a> • 
+            <a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj" target="_blank">Rozporządzenie 2016/679</a>
+        </p>
+    </footer>
+
+    <script>
+        // ============ NAWIGACJA ZAKŁADKAMI ============
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ============ SEKCJA 1: MASKOWANIE ============
+        let currentMaskType = 'masking';
+        const pseudonymMap = {};
+        let pseudonymCounter = 1;
+
+        const explanations = {
+            masking: '<strong>Maskowanie</strong> — częściowe ukrycie danych przy zachowaniu formatu. Dane można odtworzyć mając dostęp do oryginału. Stosowane w: logach, raportach, środowiskach testowych, helpdesku.',
+            pseudonym: '<strong>Pseudonimizacja</strong> — zamiana identyfikatorów na sztuczne. Dane można powiązać z osobą mając klucz mapowania. Wymagana przez RODO jako środek ochrony (art. 32).',
+            anonym: '<strong>Anonimizacja</strong> — nieodwracalne usunięcie możliwości identyfikacji osoby. Dane anonimowe NIE podlegają RODO. Uwaga: prawdziwa anonimizacja jest trudna!'
+        };
+
+        document.querySelectorAll('.masking-type button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.masking-type button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMaskType = btn.dataset.type;
+                document.getElementById('masking-explanation').innerHTML = explanations[currentMaskType];
+                updateMasking();
+            });
+        });
+
+        function maskString(str, showFirst = 1, showLast = 0) {
+            if (!str || str.length <= showFirst + showLast) return str;
+            const first = str.substring(0, showFirst);
+            const last = showLast > 0 ? str.substring(str.length - showLast) : '';
+            const masked = '*'.repeat(str.length - showFirst - showLast);
+            return first + masked + last;
+        }
+
+        function maskEmail(email) {
+            if (!email || !email.includes('@')) return email;
+            const [local, domain] = email.split('@');
+            return maskString(local, 2, 0) + '@' + maskString(domain, 0, 0).replace(/./g, '*');
+        }
+
+        function pseudonymize(value, type) {
+            if (!value) return '-';
+            const key = type + ':' + value;
+            if (!pseudonymMap[key]) {
+                pseudonymMap[key] = `${type.toUpperCase()}_${String(pseudonymCounter++).padStart(5, '0')}`;
+            }
+            return pseudonymMap[key];
+        }
+
+        function anonymize(type) {
+            const responses = {
+                name: '[USUNIĘTO]',
+                email: 'user_' + Math.random().toString(36).substr(2, 8) + '@anon.local',
+                phone: '[BRAK DANYCH]',
+                pesel: '[NIEODWRACALNIE USUNIĘTO]'
+            };
+            return responses[type] || '[ANON]';
+        }
+
+        function applyProtection(value, type) {
+            if (!value) return '-';
+            
+            if (currentMaskType === 'masking') {
+                switch(type) {
+                    case 'name':
+                        return value.split(' ').map(part => maskString(part, 1, 0)).join(' ');
+                    case 'email':
+                        return maskEmail(value);
+                    case 'phone':
+                        return maskString(value.replace(/\s/g, ''), 0, 3);
+                    case 'pesel':
+                        return maskString(value, 0, 4);
+                    default:
+                        return maskString(value);
+                }
+            } else if (currentMaskType === 'pseudonym') {
+                return pseudonymize(value, type);
+            } else {
+                return anonymize(type);
+            }
+        }
+
+        function updateMasking() {
+            const name = document.getElementById('mask-name').value;
+            const email = document.getElementById('mask-email').value;
+            const phone = document.getElementById('mask-phone').value;
+            const pesel = document.getElementById('mask-pesel').value;
+
+            document.getElementById('result-name').textContent = applyProtection(name, 'name');
+            document.getElementById('result-email').textContent = applyProtection(email, 'email');
+            document.getElementById('result-phone').textContent = applyProtection(phone, 'phone');
+            document.getElementById('result-pesel').textContent = applyProtection(pesel, 'pesel');
+        }
+
+        ['mask-name', 'mask-email', 'mask-phone', 'mask-pesel'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateMasking);
+        });
+
+        // ============ SEKCJA 2: ANALIZA FORMULARZA ============
+        const fieldAnalysis = {
+            email: { status: 'ok', message: '✅ Email — niezbędny do realizacji usługi (podstawa: umowa)' },
+            password: { status: 'ok', message: '✅ Hasło — niezbędne do zabezpieczenia konta' },
+            name: { status: 'info', message: 'ℹ️ Imię — opcjonalne, służy personalizacji. Pamiętaj o zgodzie!' },
+            phone: { status: 'warning', message: '⚠️ Telefon — upewnij się, że masz podstawę prawną (zgoda/uzasadniony interes)' },
+            birthdate: { status: 'warning', message: '⚠️ Data urodzenia — czy naprawdę potrzebujesz? Rozważ zbieranie tylko wieku lub przedziału' },
+            pesel: { status: 'danger', message: '❌ PESEL — dane nadmiarowe! Numer identyfikacyjny wymaga szczególnej ochrony i uzasadnienia' }
+        };
+
+        let collectedFields = new Set();
+
+        document.querySelectorAll('#analyzer .form-field input').forEach(input => {
+            input.addEventListener('focus', function() {
+                const field = this.closest('.form-field').dataset.field;
+                const analysis = fieldAnalysis[field];
+                
+                if (!collectedFields.has(field)) {
+                    collectedFields.add(field);
+                    addLogEntry(analysis.message, analysis.status);
+                    this.closest('.form-field').classList.add(analysis.status);
+                    updateComplianceMeter();
+                }
+            });
+
+            input.addEventListener('input', function() {
+                if (this.value && this.closest('.form-field').dataset.field === 'pesel') {
+                    addLogEntry('🚨 ALERT: Zbierasz PESEL bez wyraźnej podstawy prawnej!', 'danger');
+                }
+            });
+        });
+
+        function addLogEntry(message, type = 'info') {
+            const log = document.getElementById('inspector-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = message;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateComplianceMeter() {
+            let score = 100;
+            collectedFields.forEach(field => {
+                const analysis = fieldAnalysis[field];
+                if (analysis.status === 'warning') score -= 15;
+                if (analysis.status === 'danger') score -= 30;
+            });
+            score = Math.max(0, score);
+            
+            document.getElementById('compliance-percent').textContent = score + '%';
+            document.getElementById('compliance-bar').style.width = score + '%';
+        }
+
+        // ============ SEKCJA 3: PRZEPŁYW DANYCH ============
+        const flowDetails = {
+            input: {
+                title: '📝 Zbieranie danych (Formularz)',
+                items: [
+                    '✅ <strong>Zasada minimalizacji</strong> — zbieramy tylko niezbędne dane',
+                    '✅ <strong>Podstawa prawna</strong> — zgoda lub realizacja umowy',
+                    '✅ <strong>Informowanie</strong> — użytkownik wie co i dlaczego zbieramy',
+                    '✅ <strong>Transmisja</strong> — dane przesyłane przez HTTPS (TLS 1.3)',
+                    '⚠️ <strong>Walidacja</strong> — sprawdzenie poprawności po stronie serwera'
+                ]
+            },
+            encrypt: {
+                title: '🔐 Szyfrowanie i ochrona',
+                items: [
+                    '🔒 <strong>Szyfrowanie w spoczynku</strong> — AES-256 dla danych w bazie',
+                    '🔒 <strong>Szyfrowanie w tranzycie</strong> — TLS 1.3 dla transmisji',
+                    '🔑 <strong>Zarządzanie kluczami</strong> — HSM lub secure vault',
+                    '🔐 <strong>Haszowanie haseł</strong> — bcrypt/Argon2 (nie MD5!)',
+                    '📋 <strong>Art. 32 RODO</strong> — odpowiedni poziom bezpieczeństwa'
+                ]
+            },
+            storage: {
+                title: '🗄️ Przechowywanie danych',
+                items: [
+                    '📍 <strong>Lokalizacja</strong> — serwery w EOG (lub odpowiednie zabezpieczenia)',
+                    '⏱️ <strong>Retencja</strong> — dane usuwane po ustaniu celu',
+                    '💾 <strong>Kopie zapasowe</strong> — szyfrowane, z polityką retencji',
+                    '🔍 <strong>Audyt</strong> — logi dostępu do danych osobowych',
+                    '📊 <strong>Rejestr czynności</strong> — Art. 30 RODO'
+                ]
+            },
+            access: {
+                title: '👥 Kontrola dostępu',
+                items: [
+                    '👤 <strong>Zasada najmniejszych uprawnień</strong> — dostęp tylko gdy potrzebny',
+                    '🔐 <strong>Uwierzytelnianie</strong> — MFA dla administratorów',
+                    '📝 <strong>Logowanie</strong> — kto, kiedy, do jakich danych',
+                    '📋 <strong>Umowy powierzenia</strong> — Art. 28 RODO dla procesorów',
+                    '🚫 <strong>Podmioty trzecie</strong> — tylko z odpowiednią podstawą'
+                ]
+            }
+        };
+
+        document.querySelectorAll('.flow-node').forEach(node => {
+            node.addEventListener('click', function() {
+                document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('active'));
+                this.classList.add('active');
+                
+                const details = flowDetails[this.dataset.node];
+                const html = `
+                    <h3>${details.title}</h3>
+                    <ul>
+                        ${details.items.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                `;
+                document.getElementById('flow-details').innerHTML = html;
+            });
+        });
+
+        // ============ SEKCJA 4: PRAWA UŻYTKOWNIKA ============
+        const userData = {
+            name: "Jan Kowalski",
+            email: "jan.kowalski@email.com",
+            phone: "+48 500 123 456",
+            created: "2024-03-15",
+            lastLogin: "2025-02-05",
+            orders: 12,
+            consents: {
+                marketing: true,
+                profiling: false,
+                newsletter: true
+            }
+        };
+
+        const rightsDemo = {
+            access: () => {
+                return `
+                    <h3>📄 Prawo dostępu do danych (Art. 15)</h3>
+                    <p style="margin-bottom: 15px; color: #888;">Twoje dane przechowywane w naszym systemie:</p>
+                    <div class="data-export">${JSON.stringify(userData, null, 2)}</div>
+                    <p style="margin-top: 15px; color: #888; font-size: 0.9rem;">
+                        ✅ Administrator ma 30 dni na realizację żądania<br>
+                        ✅ Pierwsza kopia bezpłatna, kolejne mogą być płatne
+                    </p>
+                `;
+            },
+            portability: () => {
+                const exportData = JSON.stringify(userData, null, 2);
+                return `
+                    <h3>📦 Prawo do przenoszenia (Art. 20)</h3>
+                    <p style="margin-bottom: 15px; color: #888;">Eksport danych w formacie możliwym do odczytu maszynowego:</p>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button onclick="downloadData('json')" style="padding: 10px 20px; background: #4a9eff; border: none; color: #000; border-radius: 5px; cursor: pointer;">📥 Pobierz JSON</button>
+                        <button onclick="downloadData('csv')" style="padding: 10px 20px; background: #4caf50; border: none; color: #000; border-radius: 5px; cursor: pointer;">📥 Pobierz CSV</button>
+                    </div>
+                    <div class="data-export">${exportData}</div>
+                `;
+            },
+            rectify: () => {
+                return `
+                    <h3>✏️ Prawo do sprostowania (Art. 16)</h3>
+                    <p style="margin-bottom: 15px; color: #888;">Zaktualizuj swoje dane:</p>
+                    <div class="form-field" style="margin-bottom: 15px;">
+                        <label style="color: #888; margin-bottom: 5px; display: block;">Imię i nazwisko</label>
+                        <input type="text" value="${userData.name}" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 2px solid #4a9eff; color: #fff; border-radius: 5px;">
+                    </div>
+                    <div class="form-field" style="margin-bottom: 15px;">
+                        <label style="color: #888; margin-bottom: 5px; display: block;">Telefon</label>
+                        <input type="tel" value="${userData.phone}" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 2px solid #4a9eff; color: #fff; border-radius: 5px;">
+                    </div>
+                    <button style="padding: 10px 30px; background: #4caf50; border: none; color: #000; border-radius: 5px; cursor: pointer;">💾 Zapisz zmiany</button>
+                    <p style="margin-top: 15px; color: #888; font-size: 0.9rem;">
+                        ✅ Zmiany zostaną wprowadzone natychmiast<br>
+                        ✅ Powiadomienia o zmianie wysłane do administratora
+                    </p>
+                `;
+            },
+            consent: () => {
+                return `
+                    <h3>🎚️ Zarządzanie zgodami (Art. 7)</h3>
+                    <p style="margin-bottom: 15px; color: #888;">Twoje aktualne zgody — możesz je zmienić w dowolnym momencie:</p>
+                    <div class="consent-item">
+                        <div class="consent-label">
+                            <span>📧</span>
+                            <span>Komunikacja marketingowa</span>
+                        </div>
+                        <div class="toggle ${userData.consents.marketing ? 'active' : ''}" onclick="this.classList.toggle('active')"></div>
+                    </div>
+                    <div class="consent-item">
+                        <div class="consent-label">
+                            <span>📊</span>
+                            <span>Profilowanie i personalizacja</span>
+                        </div>
+                        <div class="toggle ${userData.consents.profiling ? 'active' : ''}" onclick="this.classList.toggle('active')"></div>
+                    </div>
+                    <div class="consent-item">
+                        <div class="consent-label">
+                            <span>📰</span>
+                            <span>Newsletter</span>
+                        </div>
+                        <div class="toggle ${userData.consents.newsletter ? 'active' : ''}" onclick="this.classList.toggle('active')"></div>
+                    </div>
+                    <p style="margin-top: 15px; color: #888; font-size: 0.9rem;">
+                        ✅ Wycofanie zgody jest tak samo łatwe jak jej wyrażenie<br>
+                        ✅ Wycofanie nie wpływa na zgodność przetwarzania przed wycofaniem
+                    </p>
+                `;
+            },
+            delete: () => {
+                return `
+                    <h3>🗑️ Prawo do usunięcia — "prawo do bycia zapomnianym" (Art. 17)</h3>
+                    <div class="delete-animation" id="delete-demo">
+                        <div class="icon">⚠️</div>
+                        <p>Czy na pewno chcesz usunąć wszystkie swoje dane?</p>
+                        <p style="color: #888; font-size: 0.9rem; margin-top: 10px;">Ta operacja jest nieodwracalna.</p>
+                        <button onclick="simulateDelete()" style="margin-top: 20px; padding: 15px 30px; background: #ff6b6b; border: none; color: #fff; border-radius: 5px; cursor: pointer; font-size: 1rem;">🗑️ Usuń moje dane</button>
+                    </div>
+                    <p style="margin-top: 15px; color: #888; font-size: 0.9rem;">
+                        ⚠️ Nie dotyczy danych niezbędnych do realizacji obowiązków prawnych<br>
+                        ⚠️ Administrator może odmówić w określonych przypadkach (Art. 17 ust. 3)
+                    </p>
+                `;
+            },
+            object: () => {
+                return `
+                    <h3>✋ Prawo do sprzeciwu (Art. 21)</h3>
+                    <p style="margin-bottom: 15px; color: #888;">Możesz sprzeciwić się przetwarzaniu w określonych celach:</p>
+                    <div class="consent-item">
+                        <div class="consent-label">
+                            <span>📢</span>
+                            <span>Marketing bezpośredni</span>
+                        </div>
+                        <button style="padding: 8px 16px; background: #ff6b6b; border: none; color: #fff; border-radius: 5px; cursor: pointer;">Sprzeciw</button>
+                    </div>
+                    <div class="consent-item">
+                        <div class="consent-label">
+                            <span>🎯</span>
+                            <span>Profilowanie do celów marketingowych</span>
+                        </div>
+                        <button style="padding: 8px 16px; background: #ff6b6b; border: none; color: #fff; border-radius: 5px; cursor: pointer;">Sprzeciw</button>
+                    </div>
+                    <div style="background: rgba(74, 158, 255, 0.1); padding: 15px; border-radius: 10px; margin-top: 20px;">
+                        <strong style="color: #4a9eff;">💡 Różnica od wycofania zgody:</strong>
+                        <p style="margin-top: 5px; font-size: 0.9rem;">Sprzeciw dotyczy przetwarzania na podstawie uzasadnionego interesu administratora — nie zgody. Przy marketingu bezpośrednim sprzeciw jest BEZWZGLĘDNY.</p>
+                    </div>
+                `;
+            }
+        };
+
+        document.querySelectorAll('.right-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const right = this.dataset.right;
+                document.getElementById('rights-demo').innerHTML = rightsDemo[right]();
+            });
+        });
+
+        function simulateDelete() {
+            const demo = document.getElementById('delete-demo');
+            demo.innerHTML = `
+                <div class="icon">🔄</div>
+                <p>Usuwanie danych...</p>
+                <div class="delete-progress">
+                    <div class="delete-progress-bar" id="delete-bar"></div>
+                </div>
+                <p id="delete-status" style="color: #888; font-size: 0.9rem;">Usuwanie profilu...</p>
+            `;
+            
+            const bar = document.getElementById('delete-bar');
+            const status = document.getElementById('delete-status');
+            const steps = [
+                { progress: 20, text: 'Usuwanie profilu...' },
+                { progress: 40, text: 'Usuwanie historii zamówień...' },
+                { progress: 60, text: 'Usuwanie zgód...' },
+                { progress: 80, text: 'Usuwanie z kopii zapasowych...' },
+                { progress: 100, text: 'Zakończono!' }
+            ];
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < steps.length) {
+                    bar.style.width = steps[i].progress + '%';
+                    status.textContent = steps[i].text;
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    demo.innerHTML = `
+                        <div class="icon">✅</div>
+                        <p style="color: #4caf50;">Twoje dane zostały usunięte</p>
+                        <p style="color: #888; font-size: 0.9rem; margin-top: 10px;">
+                            Potwierdzenie wysłane na email.<br>
+                            Niektóre dane mogą być zachowane przez okres wymagany prawem.
+                        </p>
+                    `;
+                }
+            }, 800);
+        }
+
+        function downloadData(format) {
+            alert(`📥 Pobieranie danych w formacie ${format.toUpperCase()}...\n\n(To jest demonstracja — w prawdziwej aplikacji rozpocząłby się download pliku)`);
+        }
+    </script>
+</body>
+</html>
