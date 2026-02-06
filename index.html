@@ -886,6 +886,105 @@
             border-bottom: none;
         }
 
+        .flow-items {
+            margin-bottom: 25px;
+        }
+
+        .flow-links {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(74, 158, 255, 0.3);
+        }
+
+        .flow-links h4 {
+            color: #4a9eff;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .source-link {
+            display: block;
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.15), rgba(74, 158, 255, 0.05));
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            border-radius: 10px;
+            padding: 12px 15px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .source-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(74, 158, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .source-link:hover::before {
+            left: 100%;
+        }
+
+        .source-link:hover {
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.25), rgba(74, 158, 255, 0.1));
+            border-color: rgba(74, 158, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(74, 158, 255, 0.2);
+        }
+
+        .link-title {
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.95em;
+        }
+
+        .link-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85em;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .link-url {
+            color: rgba(74, 158, 255, 0.8);
+            font-size: 0.75em;
+            font-family: monospace;
+        }
+
+        .source-link:hover .link-url {
+            color: #4a9eff;
+        }
+
+        /* Kolory dla różnych typów źródeł */
+        .source-link[href*="gdpr-info.eu"],
+        .source-link[href*="uodo.gov.pl"],
+        .source-link[href*="ec.europa.eu"] {
+            border-left: 3px solid #4caf50;
+        }
+
+        .source-link[href*="owasp.org"],
+        .source-link[href*="nist.gov"],
+        .source-link[href*="cisecurity.org"] {
+            border-left: 3px solid #ff9800;
+        }
+
+        .source-link[href*="mozilla.org"],
+        .source-link[href*="ssllabs.com"],
+        .source-link[href*="aws.amazon.com"] {
+            border-left: 3px solid #9c27b0;
+        }
+
         /* ============ SEKCJA 4: PRAWA UŻYTKOWNIKA ============ */
         .rights-container {
             max-width: 900px;
@@ -1823,13 +1922,48 @@
 
             <div class="flow-details" id="flow-details">
                 <h3>📝 Zbieranie danych (Formularz)</h3>
-                <ul>
-                    <li>✅ <strong>Zasada minimalizacji</strong> — zbieramy tylko niezbędne dane</li>
-                    <li>✅ <strong>Podstawa prawna</strong> — zgoda lub realizacja umowy</li>
-                    <li>✅ <strong>Informowanie</strong> — użytkownik wie co i dlaczego zbieramy</li>
-                    <li>✅ <strong>Transmisja</strong> — dane przesyłane przez HTTPS (TLS 1.3)</li>
-                    <li>⚠️ <strong>Walidacja</strong> — sprawdzenie poprawności po stronie serwera</li>
+                <ul class="flow-items">
+                    <li>✅ <strong>Zasada minimalizacji (Art. 5 ust. 1 lit. c)</strong> — zbieramy tylko niezbędne dane do określonego celu</li>
+                    <li>✅ <strong>Podstawa prawna (Art. 6)</strong> — zgoda, umowa, obowiązek prawny, interes publiczny lub prawnie uzasadniony interes</li>
+                    <li>✅ <strong>Obowiązek informacyjny (Art. 13-14)</strong> — użytkownik musi wiedzieć: kto, co, dlaczego, jak długo</li>
+                    <li>✅ <strong>Transmisja HTTPS</strong> — TLS 1.3 szyfruje dane "w locie" między przeglądarką a serwerem</li>
+                    <li>⚠️ <strong>Walidacja server-side</strong> — nigdy nie ufaj danym od klienta (OWASP Top 10: A03 Injection)</li>
                 </ul>
+                <div class="flow-links">
+                    <h4>📚 Dowiedz się więcej:</h4>
+                    <div class="links-grid">
+                        <a href="https://gdpr-info.eu/art-5-gdpr/" target="_blank" rel="noopener noreferrer" class="source-link">
+                            <div class="link-title">📖 Art. 5 RODO — Zasady przetwarzania</div>
+                            <div class="link-desc">Oficjalny tekst + komentarz</div>
+                            <div class="link-url">gdpr-info.eu</div>
+                        </a>
+                        <a href="https://gdpr-info.eu/art-6-gdpr/" target="_blank" rel="noopener noreferrer" class="source-link">
+                            <div class="link-title">📖 Art. 6 RODO — Podstawy prawne</div>
+                            <div class="link-desc">6 legalnych podstaw przetwarzania</div>
+                            <div class="link-url">gdpr-info.eu</div>
+                        </a>
+                        <a href="https://gdpr-info.eu/art-13-gdpr/" target="_blank" rel="noopener noreferrer" class="source-link">
+                            <div class="link-title">📖 Art. 13 RODO — Obowiązek informacyjny</div>
+                            <div class="link-desc">Co musisz powiedzieć użytkownikowi</div>
+                            <div class="link-url">gdpr-info.eu</div>
+                        </a>
+                        <a href="https://owasp.org/www-project-top-ten/" target="_blank" rel="noopener noreferrer" class="source-link">
+                            <div class="link-title">🔒 OWASP Top 10</div>
+                            <div class="link-desc">10 najczęstszych zagrożeń webowych</div>
+                            <div class="link-url">owasp.org</div>
+                        </a>
+                        <a href="https://wiki.mozilla.org/Security/Server_Side_TLS" target="_blank" rel="noopener noreferrer" class="source-link">
+                            <div class="link-title">🔐 Mozilla TLS Guidelines</div>
+                            <div class="link-desc">Jak poprawnie skonfigurować HTTPS</div>
+                            <div class="link-url">wiki.mozilla.org</div>
+                        </a>
+                        <a href="https://uodo.gov.pl/pl/138" target="_blank" rel="noopener noreferrer" class="source-link">
+                            <div class="link-title">🇵🇱 UODO — Poradniki</div>
+                            <div class="link-desc">Oficjalne poradniki polskiego organu nadzorczego</div>
+                            <div class="link-url">uodo.gov.pl</div>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -2196,41 +2330,73 @@
             input: {
                 title: '📝 Zbieranie danych (Formularz)',
                 items: [
-                    '✅ <strong>Zasada minimalizacji</strong> — zbieramy tylko niezbędne dane',
-                    '✅ <strong>Podstawa prawna</strong> — zgoda lub realizacja umowy',
-                    '✅ <strong>Informowanie</strong> — użytkownik wie co i dlaczego zbieramy',
-                    '✅ <strong>Transmisja</strong> — dane przesyłane przez HTTPS (TLS 1.3)',
-                    '⚠️ <strong>Walidacja</strong> — sprawdzenie poprawności po stronie serwera'
+                    '✅ <strong>Zasada minimalizacji (Art. 5 ust. 1 lit. c)</strong> — zbieramy tylko niezbędne dane do określonego celu',
+                    '✅ <strong>Podstawa prawna (Art. 6)</strong> — zgoda, umowa, obowiązek prawny, interes publiczny lub prawnie uzasadniony interes',
+                    '✅ <strong>Obowiązek informacyjny (Art. 13-14)</strong> — użytkownik musi wiedzieć: kto, co, dlaczego, jak długo',
+                    '✅ <strong>Transmisja HTTPS</strong> — TLS 1.3 szyfruje dane "w locie" między przeglądarką a serwerem',
+                    '⚠️ <strong>Walidacja server-side</strong> — nigdy nie ufaj danym od klienta (OWASP Top 10: A03 Injection)'
+                ],
+                links: [
+                    { title: '📖 Art. 5 RODO — Zasady przetwarzania', url: 'https://gdpr-info.eu/art-5-gdpr/', desc: 'Oficjalny tekst + komentarz' },
+                    { title: '📖 Art. 6 RODO — Podstawy prawne', url: 'https://gdpr-info.eu/art-6-gdpr/', desc: '6 legalnych podstaw przetwarzania' },
+                    { title: '📖 Art. 13 RODO — Obowiązek informacyjny', url: 'https://gdpr-info.eu/art-13-gdpr/', desc: 'Co musisz powiedzieć użytkownikowi' },
+                    { title: '🔒 OWASP Top 10', url: 'https://owasp.org/www-project-top-ten/', desc: '10 najczęstszych zagrożeń webowych' },
+                    { title: '🔐 Mozilla TLS Guidelines', url: 'https://wiki.mozilla.org/Security/Server_Side_TLS', desc: 'Jak poprawnie skonfigurować HTTPS' },
+                    { title: '🇵🇱 UODO — Poradniki', url: 'https://uodo.gov.pl/pl/138', desc: 'Oficjalne poradniki polskiego organu nadzorczego' }
                 ]
             },
             encrypt: {
                 title: '🔐 Szyfrowanie i ochrona',
                 items: [
-                    '🔒 <strong>Szyfrowanie w spoczynku</strong> — AES-256 dla danych w bazie',
-                    '🔒 <strong>Szyfrowanie w tranzycie</strong> — TLS 1.3 dla transmisji',
-                    '🔑 <strong>Zarządzanie kluczami</strong> — HSM lub secure vault',
-                    '🔐 <strong>Haszowanie haseł</strong> — bcrypt/Argon2 (nie MD5!)',
-                    '📋 <strong>Art. 32 RODO</strong> — odpowiedni poziom bezpieczeństwa'
+                    '🔒 <strong>Szyfrowanie w spoczynku (at rest)</strong> — AES-256-GCM dla danych w bazie i na dysku',
+                    '🔒 <strong>Szyfrowanie w tranzycie (in transit)</strong> — TLS 1.3 eliminuje słabe szyfry (RC4, 3DES)',
+                    '🔑 <strong>Zarządzanie kluczami (KMS)</strong> — HSM, AWS KMS, Azure Key Vault — klucze nigdy w kodzie!',
+                    '🔐 <strong>Haszowanie haseł</strong> — Argon2id (zwycięzca PHC) > bcrypt > PBKDF2. Nigdy MD5/SHA1!',
+                    '📋 <strong>Art. 32 RODO</strong> — "odpowiedni poziom bezpieczeństwa" = ocena ryzyka + adekwatne środki'
+                ],
+                links: [
+                    { title: '📖 Art. 32 RODO — Bezpieczeństwo', url: 'https://gdpr-info.eu/art-32-gdpr/', desc: 'Obowiązek odpowiednich środków technicznych' },
+                    { title: '🔐 NIST Cryptographic Standards', url: 'https://csrc.nist.gov/publications/detail/sp/800-175b/rev-1/final', desc: 'Oficjalne standardy kryptograficzne USA' },
+                    { title: '🏆 Password Hashing Competition', url: 'https://www.password-hashing.net/', desc: 'Dlaczego Argon2 wygrał konkurs PHC' },
+                    { title: '🔑 OWASP Password Storage', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html', desc: 'Jak bezpiecznie przechowywać hasła' },
+                    { title: '☁️ AWS KMS Best Practices', url: 'https://docs.aws.amazon.com/kms/latest/developerguide/best-practices.html', desc: 'Zarządzanie kluczami w chmurze' },
+                    { title: '🔒 SSL Labs Test', url: 'https://www.ssllabs.com/ssltest/', desc: 'Sprawdź konfigurację TLS swojego serwera' }
                 ]
             },
             storage: {
                 title: '🗄️ Przechowywanie danych',
                 items: [
-                    '📍 <strong>Lokalizacja</strong> — serwery w EOG (lub odpowiednie zabezpieczenia)',
-                    '⏱️ <strong>Retencja</strong> — dane usuwane po ustaniu celu',
-                    '💾 <strong>Kopie zapasowe</strong> — szyfrowane, z polityką retencji',
-                    '🔍 <strong>Audyt</strong> — logi dostępu do danych osobowych',
-                    '📊 <strong>Rejestr czynności</strong> — Art. 30 RODO'
+                    '📍 <strong>Lokalizacja danych</strong> — EOG bez ograniczeń; poza EOG wymaga SCC, BCR lub decyzji adekwatności',
+                    '⏱️ <strong>Retencja (Art. 5 ust. 1 lit. e)</strong> — dane usuwane gdy cel przetwarzania ustał',
+                    '💾 <strong>Kopie zapasowe</strong> — szyfrowane, z własną polityką retencji, testowane regularnie',
+                    '🔍 <strong>Audyt i logi</strong> — SIEM, immutable logs, kto/kiedy/do czego miał dostęp',
+                    '📊 <strong>Rejestr czynności (Art. 30)</strong> — obowiązkowy dla firm 250+ lub przy przetwarzaniu wrażliwych danych'
+                ],
+                links: [
+                    { title: '📖 Art. 5 ust. 1 lit. e RODO — Retencja', url: 'https://gdpr-info.eu/art-5-gdpr/', desc: 'Zasada ograniczenia przechowywania' },
+                    { title: '📖 Art. 30 RODO — Rejestr czynności', url: 'https://gdpr-info.eu/art-30-gdpr/', desc: 'Co musi zawierać rejestr' },
+                    { title: '🌍 Transfery poza EOG', url: 'https://ec.europa.eu/info/law/law-topic/data-protection/international-dimension-data-protection_en', desc: 'Oficjalne wytyczne Komisji Europejskiej' },
+                    { title: '📋 Standardowe klauzule (SCC)', url: 'https://ec.europa.eu/info/law/law-topic/data-protection/international-dimension-data-protection/standard-contractual-clauses-scc_en', desc: 'Wzory umów dla transferów danych' },
+                    { title: '🇵🇱 UODO — Rejestr czynności', url: 'https://uodo.gov.pl/pl/123/214', desc: 'Poradnik UODO dot. rejestru' },
+                    { title: '💾 NIST Backup Guidelines', url: 'https://csrc.nist.gov/publications/detail/sp/800-34/rev-1/final', desc: 'Contingency Planning Guide' }
                 ]
             },
             access: {
                 title: '👥 Kontrola dostępu',
                 items: [
-                    '👤 <strong>Zasada najmniejszych uprawnień</strong> — dostęp tylko gdy potrzebny',
-                    '🔐 <strong>Uwierzytelnianie</strong> — MFA dla administratorów',
-                    '📝 <strong>Logowanie</strong> — kto, kiedy, do jakich danych',
-                    '📋 <strong>Umowy powierzenia</strong> — Art. 28 RODO dla procesorów',
-                    '🚫 <strong>Podmioty trzecie</strong> — tylko z odpowiednią podstawą'
+                    '👤 <strong>Zasada najmniejszych uprawnień (PoLP)</strong> — dostęp tylko do tego co niezbędne do pracy',
+                    '🔐 <strong>MFA (Multi-Factor Auth)</strong> — obowiązkowe dla adminów i dostępu do danych wrażliwych',
+                    '📝 <strong>Audit trail</strong> — immutable logi: kto, kiedy, skąd, do jakich danych, jaka operacja',
+                    '📋 <strong>Umowy powierzenia (Art. 28)</strong> — procesor = firma przetwarzająca w Twoim imieniu',
+                    '🚫 <strong>Ocena dostawców</strong> — due diligence przed powierzeniem danych podmiotowi trzeciemu'
+                ],
+                links: [
+                    { title: '📖 Art. 28 RODO — Procesor', url: 'https://gdpr-info.eu/art-28-gdpr/', desc: 'Wymagania dla umów powierzenia' },
+                    { title: '📖 Art. 29 RODO — Upoważnienia', url: 'https://gdpr-info.eu/art-29-gdpr/', desc: 'Kto może przetwarzać dane' },
+                    { title: '🔐 NIST Access Control', url: 'https://csrc.nist.gov/publications/detail/sp/800-162/final', desc: 'Guide to Attribute Based Access Control' },
+                    { title: '🔑 OWASP Access Control', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Access_Control_Cheat_Sheet.html', desc: 'Best practices kontroli dostępu' },
+                    { title: '🇵🇱 UODO — Umowy powierzenia', url: 'https://uodo.gov.pl/pl/138/427', desc: 'Poradnik UODO' },
+                    { title: '📊 CIS Controls', url: 'https://www.cisecurity.org/controls', desc: '18 krytycznych kontroli bezpieczeństwa' }
                 ]
             }
         };
@@ -2241,11 +2407,27 @@
                 this.classList.add('active');
                 
                 const details = flowDetails[this.dataset.node];
+                const linksHtml = details.links ? `
+                    <div class="flow-links">
+                        <h4>📚 Dowiedz się więcej:</h4>
+                        <div class="links-grid">
+                            ${details.links.map(link => `
+                                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="source-link">
+                                    <div class="link-title">${link.title}</div>
+                                    <div class="link-desc">${link.desc}</div>
+                                    <div class="link-url">${link.url.replace('https://', '').split('/')[0]}</div>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : '';
+                
                 const html = `
                     <h3>${details.title}</h3>
-                    <ul>
+                    <ul class="flow-items">
                         ${details.items.map(item => `<li>${item}</li>`).join('')}
                     </ul>
+                    ${linksHtml}
                 `;
                 document.getElementById('flow-details').innerHTML = html;
             });
