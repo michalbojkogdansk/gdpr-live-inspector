@@ -692,10 +692,51 @@
         .form-field.danger input {
             border-color: #ff6b6b;
             background: rgba(255, 107, 107, 0.1);
+            animation: shake 0.3s ease-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         .form-field.ok input {
             border-color: #4caf50;
+        }
+
+        /* Naprawione pole - po usunięciu nadmiarowych danych */
+        .form-field.fixed input {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+            animation: fixedPulse 0.5s ease-out;
+        }
+
+        .form-field.fixed::after {
+            content: '✓ Naprawione';
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-size: 0.75rem;
+            color: #4caf50;
+            background: rgba(76, 175, 80, 0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .form-field {
+            position: relative;
+        }
+
+        @keyframes fixedPulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.5); }
+            100% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .inspector-log {
@@ -724,6 +765,17 @@
         .log-entry.warning { background: rgba(255, 165, 0, 0.2); border-left: 3px solid #ffa500; }
         .log-entry.danger { background: rgba(255, 107, 107, 0.2); border-left: 3px solid #ff6b6b; }
         .log-entry.info { background: rgba(74, 158, 255, 0.2); border-left: 3px solid #4a9eff; }
+        .log-entry.success { 
+            background: linear-gradient(90deg, rgba(76, 175, 80, 0.3), rgba(139, 195, 74, 0.2)); 
+            border-left: 3px solid #4caf50;
+            animation: successPop 0.4s ease-out;
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0.95); opacity: 0; }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); opacity: 1; }
+        }
 
         .compliance-meter {
             background: rgba(0,0,0,0.3);
@@ -1970,56 +2022,173 @@
 
         // ============ SEKCJA 2: ANALIZA FORMULARZA ============
         const fieldAnalysis = {
-            email: { status: 'ok', message: '✅ Email — niezbędny do realizacji usługi (podstawa: umowa)' },
-            password: { status: 'ok', message: '✅ Hasło — niezbędne do zabezpieczenia konta' },
-            name: { status: 'info', message: 'ℹ️ Imię — opcjonalne, służy personalizacji. Pamiętaj o zgodzie!' },
-            phone: { status: 'warning', message: '⚠️ Telefon — upewnij się, że masz podstawę prawną (zgoda/uzasadniony interes)' },
-            birthdate: { status: 'warning', message: '⚠️ Data urodzenia — czy naprawdę potrzebujesz? Rozważ zbieranie tylko wieku lub przedziału' },
-            pesel: { status: 'danger', message: '❌ PESEL — dane nadmiarowe! Numer identyfikacyjny wymaga szczególnej ochrony i uzasadnienia' }
+            email: { 
+                status: 'ok', 
+                message: '✅ Email — niezbędny do realizacji usługi (podstawa: umowa)',
+                hint: 'Email jest OK — to podstawowa dana do komunikacji z użytkownikiem.'
+            },
+            password: { 
+                status: 'ok', 
+                message: '✅ Hasło — niezbędne do zabezpieczenia konta',
+                hint: 'Hasło jest OK — pamiętaj o hashowaniu (bcrypt/Argon2)!'
+            },
+            name: { 
+                status: 'info', 
+                message: 'ℹ️ Imię — opcjonalne, służy personalizacji. Pamiętaj o zgodzie!',
+                hint: 'Imię jest opcjonalne. Jeśli służy tylko do "Cześć, Jan!" — rozważ czy jest niezbędne.'
+            },
+            phone: { 
+                status: 'warning', 
+                message: '⚠️ Telefon — upewnij się, że masz podstawę prawną (zgoda/uzasadniony interes)',
+                hint: 'Telefon to dodatkowa dana kontaktowa. Czy na pewno potrzebujesz SMS-ów? Usuń jeśli nie.'
+            },
+            birthdate: { 
+                status: 'warning', 
+                message: '⚠️ Data urodzenia — czy naprawdę potrzebujesz? Rozważ zbieranie tylko wieku lub przedziału',
+                hint: 'Zamiast daty urodzenia rozważ: pytanie "Czy masz 18 lat? TAK/NIE" — minimalizacja danych!'
+            },
+            pesel: { 
+                status: 'danger', 
+                message: '❌ PESEL — dane nadmiarowe! Numer identyfikacyjny wymaga szczególnej ochrony i uzasadnienia',
+                hint: '🚨 PESEL to dana wrażliwa! Usuń to pole — jest nadmiarowe dla większości usług online.'
+            }
         };
 
         let collectedFields = new Set();
+        let loggedMessages = new Set(); // Śledzi które wiadomości już pokazano
 
         document.querySelectorAll('#analyzer .form-field input').forEach(input => {
+            // Reaguj na każdą zmianę wartości (wpisywanie I usuwanie)
+            input.addEventListener('input', function() {
+                const field = this.closest('.form-field').dataset.field;
+                const analysis = fieldAnalysis[field];
+                const fieldElement = this.closest('.form-field');
+                const hasValue = this.value.trim().length > 0;
+                
+                if (hasValue) {
+                    // DODAWANIE danych do pola
+                    if (!collectedFields.has(field)) {
+                        collectedFields.add(field);
+                        addLogEntry(analysis.message, analysis.status);
+                        loggedMessages.add(field + '_add');
+                        
+                        // Specjalne ostrzeżenie dla PESEL
+                        if (field === 'pesel' && !loggedMessages.has('pesel_alert')) {
+                            addLogEntry('🚨 ALERT: Zbierasz PESEL bez wyraźnej podstawy prawnej!', 'danger');
+                            loggedMessages.add('pesel_alert');
+                        }
+                    }
+                    
+                    // Dodaj klasę statusu
+                    fieldElement.classList.remove('success', 'warning', 'danger', 'fixed');
+                    fieldElement.classList.add(analysis.status);
+                    
+                } else {
+                    // USUWANIE danych z pola
+                    if (collectedFields.has(field)) {
+                        collectedFields.delete(field);
+                        
+                        // Komunikat o usunięciu danych
+                        if (analysis.status === 'danger') {
+                            addLogEntry(`✅ <strong>${getFieldName(field)}</strong> usunięte — świetna decyzja! Mniej danych = mniejsze ryzyko.`, 'success');
+                        } else if (analysis.status === 'warning') {
+                            addLogEntry(`🔄 <strong>${getFieldName(field)}</strong> usunięte — rozważ czy na pewno potrzebujesz tej danej.`, 'info');
+                        } else {
+                            addLogEntry(`ℹ️ <strong>${getFieldName(field)}</strong> usunięte.`, 'info');
+                        }
+                        
+                        // Zmień wygląd pola na "naprawione"
+                        fieldElement.classList.remove('success', 'warning', 'danger');
+                        if (analysis.status === 'danger' || analysis.status === 'warning') {
+                            fieldElement.classList.add('fixed');
+                        }
+                    }
+                }
+                
+                updateComplianceMeter();
+            });
+            
+            // Przy focusie pokaż podpowiedź (ale nie dodawaj do collectedFields)
             input.addEventListener('focus', function() {
                 const field = this.closest('.form-field').dataset.field;
                 const analysis = fieldAnalysis[field];
                 
-                if (!collectedFields.has(field)) {
-                    collectedFields.add(field);
-                    addLogEntry(analysis.message, analysis.status);
-                    this.closest('.form-field').classList.add(analysis.status);
-                    updateComplianceMeter();
-                }
-            });
-
-            input.addEventListener('input', function() {
-                if (this.value && this.closest('.form-field').dataset.field === 'pesel') {
-                    addLogEntry('🚨 ALERT: Zbierasz PESEL bez wyraźnej podstawy prawnej!', 'danger');
+                // Pokaż podpowiedź przy pierwszym kliknięciu w nadmiarowe pole
+                if ((analysis.status === 'danger' || analysis.status === 'warning') && !loggedMessages.has(field + '_hint')) {
+                    addLogEntry(`💡 <strong>Podpowiedź:</strong> ${analysis.hint || 'Zastanów się czy to pole jest niezbędne.'}`, 'info');
+                    loggedMessages.add(field + '_hint');
                 }
             });
         });
+        
+        function getFieldName(field) {
+            const names = {
+                'email': 'Email',
+                'password': 'Hasło',
+                'name': 'Imię',
+                'phone': 'Telefon',
+                'birthdate': 'Data urodzenia',
+                'pesel': 'PESEL'
+            };
+            return names[field] || field;
+        }
 
         function addLogEntry(message, type = 'info') {
             const log = document.getElementById('inspector-log');
             const entry = document.createElement('div');
             entry.className = `log-entry ${type}`;
             entry.innerHTML = message;
+            
+            // Animacja wejścia
+            entry.style.opacity = '0';
+            entry.style.transform = 'translateX(-20px)';
             log.appendChild(entry);
+            
+            // Trigger animacji
+            setTimeout(() => {
+                entry.style.transition = 'all 0.3s ease';
+                entry.style.opacity = '1';
+                entry.style.transform = 'translateX(0)';
+            }, 10);
+            
             log.scrollTop = log.scrollHeight;
         }
 
         function updateComplianceMeter() {
             let score = 100;
+            let penalties = [];
+            
             collectedFields.forEach(field => {
                 const analysis = fieldAnalysis[field];
-                if (analysis.status === 'warning') score -= 15;
-                if (analysis.status === 'danger') score -= 30;
+                if (analysis.status === 'warning') {
+                    score -= 15;
+                    penalties.push(`${getFieldName(field)}: -15%`);
+                }
+                if (analysis.status === 'danger') {
+                    score -= 30;
+                    penalties.push(`${getFieldName(field)}: -30%`);
+                }
             });
             score = Math.max(0, score);
             
-            document.getElementById('compliance-percent').textContent = score + '%';
-            document.getElementById('compliance-bar').style.width = score + '%';
+            const percentEl = document.getElementById('compliance-percent');
+            const barEl = document.getElementById('compliance-bar');
+            
+            // Animowana zmiana wartości
+            percentEl.textContent = score + '%';
+            barEl.style.width = score + '%';
+            
+            // Zmiana koloru w zależności od wyniku
+            if (score >= 80) {
+                barEl.style.background = 'linear-gradient(90deg, #4caf50, #8bc34a)';
+                percentEl.style.color = '#4caf50';
+            } else if (score >= 50) {
+                barEl.style.background = 'linear-gradient(90deg, #ff9800, #ffc107)';
+                percentEl.style.color = '#ff9800';
+            } else {
+                barEl.style.background = 'linear-gradient(90deg, #f44336, #ff5722)';
+                percentEl.style.color = '#f44336';
+            }
         }
 
         // ============ SEKCJA 3: PRZEPŁYW DANYCH ============
